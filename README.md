@@ -1,6 +1,6 @@
 # rexpand-pyutils-matching
 
-A Python library providing various string matching utilities including exact matching, fuzzy matching with multiple similarity measures, and string normalization.
+A Python library providing various string matching utilities including exact matching, fuzzy matching, and LLM-powered search capabilities.
 
 ## Installation
 
@@ -11,14 +11,11 @@ pip install rexpand-pyutils-matching
 ## Features
 
 - Exact string matching
-- Fuzzy string matching with multiple similarity measures:
-  - Levenshtein distance
-  - Longest common subsequence
-  - Common prefix
-  - Starts with
-- String normalization utilities
-- Configurable similarity thresholds
-- Optional string normalization
+- Fuzzy string matching with customizable threshold
+- Levenshtein distance calculation
+- Longest common subsequence finding
+- LLM-powered search with exact matching and value suggestion
+- Multiple similarity measures for string comparison
 
 ## Usage
 
@@ -26,54 +23,46 @@ pip install rexpand-pyutils-matching
 from rexpand_pyutils_matching import (
     exact_match,
     fuzzy_match,
-    SimilarityMeasure,
-    normalize_string,
+    fuzzy_search,
+    search,  # Main search function with LLM capabilities
+    SimilarityMeasure,  # Enum for different similarity measures
+    SIMILARITY_FUNCTIONS,  # Dictionary of available similarity functions
 )
 
-# Exact matching
+# Basic string matching
 exact_match("hello", "hello")  # True
 exact_match("hello", "world")  # False
 
-# Fuzzy matching with different similarity measures
-fuzzy_match("hello", "helo", threshold=0.8)  # Using Levenshtein (default)
-fuzzy_match("hello", "helo", threshold=0.8, similarity_measure=SimilarityMeasure.LONGEST_COMMON_SEQUENCE)
-fuzzy_match("hello world", "hello", threshold=0.8, similarity_measure=SimilarityMeasure.COMMON_PREFIX)
-fuzzy_match("hello world", "hello", threshold=0.8, similarity_measure=SimilarityMeasure.STARTS_WITH)
+# Fuzzy matching
+fuzzy_match("hello", "helo", threshold=0.6)  # True
+fuzzy_match("hello", "world", threshold=0.6)  # False
 
-# Without string normalization
-fuzzy_match("Hello", "hello", threshold=0.8, normalize=False)
+# Fuzzy search with multiple candidates
+fuzzy_search(
+    search_key="Stanford",
+    standard_values=["Stanford University", "Stanford", "Harvard University"],
+    threshold=None,
+    candidate_count=3,
+    similarity_measure=SimilarityMeasure.COMMON_PREFIX
+) # [('Stanford', 1), ('Stanford University', 0.6481481481481481), ('Harvard University', 0.0)]
 
-# String normalization
-normalize_string("Hello, World!")  # "hello world"
+# Advanced search with LLM capabilities
+search(
+    search_key="Stanford University",
+    standard_values=["Stanford University", "Stanford", "Harvard University"],
+    threshold=0.8,
+    candidate_count=3,
+    use_llm_for_exact_match=True,  # Enable LLM for exact matching
+    use_llm_for_suggestion=True,   # Enable LLM for suggesting new values
+    chatgpt_api_key="your-api-key" # Required for LLM features
+) # {"candidate": "Stanford University", "is_suggested": False}
 ```
-
-## Similarity Measures
-
-The package provides several similarity measures for fuzzy matching:
-
-1. **Levenshtein** (default)
-
-   - Measures the minimum number of single-character edits required to change one string into another
-   - Good for general-purpose string similarity
-
-2. **Longest Common Subsequence**
-
-   - Finds the longest sequence of characters that appear in both strings in the same order
-   - Useful when character order matters but characters don't need to be consecutive
-
-3. **Common Prefix**
-
-   - Calculates similarity based on common prefixes between words
-   - Good for matching words that share the same beginning
-
-4. **Starts With**
-   - Checks if one string starts with another
-   - Useful for prefix-based matching
 
 ## Requirements
 
 - Python >= 3.11
 - NumPy >= 1.21.0
+- OpenAI API key (for LLM features)
 
 ## Development
 
@@ -123,6 +112,21 @@ To deactivate the virtual environment when you're done:
 ```bash
 deactivate
 ```
+
+## Publishing to PyPI
+
+To publish to PyPI while excluding local test files, create or update your `.gitignore` file to include:
+
+```
+# Local test files
+some_file.txt
+```
+
+Then follow these steps:
+
+1. Update your `setup.py` or `pyproject.toml` to exclude these files from the package distribution
+2. Build the package: `make build`
+3. Upload to PyPI: `make publish`
 
 ## License
 

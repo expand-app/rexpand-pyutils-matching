@@ -4,7 +4,7 @@ from ..utils.string import normalize_string
 def _get_partial_similarity(
     s1_substrings: list[str],
     s2_substrings: list[str],
-    common_prefix_min_length: int = 2,
+    common_prefix_min_ratio: float = 0.66,
 ) -> bool:
     set_a = set(s1_substrings)
     set_b = set(s2_substrings)
@@ -18,14 +18,14 @@ def _get_partial_similarity(
             for b in set_b:
                 # Find the common prefix length
                 common_prefix_len = 0
-                for i in range(min(len(a), len(b))):
+                min_len = min(len(a), len(b))
+
+                for i in range(min_len):
                     if a[i] != b[i]:
                         break
                     common_prefix_len += 1
 
-                if (
-                    common_prefix_len >= common_prefix_min_length
-                ):  # Only consider matches with at least `common_prefix_min_length` characters
+                if (common_prefix_len / min_len) >= common_prefix_min_ratio:
                     # Score = 2 * common_prefix_length / (length_a + length_b)
                     current_score = max(
                         current_score, 2 * common_prefix_len / (len(a) + len(b))
@@ -39,7 +39,7 @@ def _get_partial_similarity(
 def get_common_prefix_similarity(
     s1: str,
     s2: str,
-    common_prefix_min_length: int = 2,
+    common_prefix_min_ratio: float = 0.66,
     normalize: bool = True,
 ) -> bool:
     """
@@ -49,7 +49,7 @@ def get_common_prefix_similarity(
     Args:
         s1: First string
         s2: Second string
-        common_prefix_min_length: Minimum length of common prefix to consider
+        common_prefix_min_ratio: Minimum length of common prefix to consider
         normalize: Whether to normalize the strings before comparison
 
     Returns:
@@ -66,10 +66,10 @@ def get_common_prefix_similarity(
         s2_substrings = s2.split()
 
         score_a = _get_partial_similarity(
-            s1_substrings, s2_substrings, common_prefix_min_length
+            s1_substrings, s2_substrings, common_prefix_min_ratio
         )
         score_b = _get_partial_similarity(
-            s2_substrings, s1_substrings, common_prefix_min_length
+            s2_substrings, s1_substrings, common_prefix_min_ratio
         )
 
         weighted_partial_score_a = score_a * len(s1) / (len(s1) + len(s2))

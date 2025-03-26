@@ -22,6 +22,14 @@ class SimilarityMeasure(Enum):
     STARTS_WITH = "starts_with"
 
 
+SIMILARITY_FUNCTIONS = {
+    SimilarityMeasure.LEVENSHTEIN: get_levenshtein_similarity,
+    SimilarityMeasure.LONGEST_COMMON_SEQUENCE: get_longest_common_sequence_similarity,
+    SimilarityMeasure.COMMON_PREFIX: get_common_prefix_similarity,
+    SimilarityMeasure.STARTS_WITH: get_starts_with_similarity,
+}
+
+
 def exact_match(text: str, pattern: str, normalize: bool = True) -> bool:
     """
     Perform exact string matching.
@@ -50,7 +58,7 @@ def fuzzy_match(
     text: str,
     pattern: str,
     threshold: float = 0.95,
-    similarity_measure: SimilarityMeasure = SimilarityMeasure.LEVENSHTEIN,
+    similarity_measure: SimilarityMeasure = SimilarityMeasure.COMMON_PREFIX,
     normalize: bool = True,
 ) -> bool:
     """
@@ -60,7 +68,7 @@ def fuzzy_match(
         text: The text to search in
         pattern: The pattern to search for
         threshold: Similarity threshold (0.0 to 1.0), default is 0.8
-        similarity_measure: The similarity measure to use, default is Levenshtein
+        similarity_measure: The similarity measure to use, default is COMMON_PREFIX
         normalize: Whether to normalize strings before comparison, default is True
 
     Returns:
@@ -74,13 +82,7 @@ def fuzzy_match(
         >>> fuzzy_match("hello world", "hello", 0.8, SimilarityMeasure.STARTS_WITH)
         True
     """
-    similarity_functions = {
-        SimilarityMeasure.LEVENSHTEIN: get_levenshtein_similarity,
-        SimilarityMeasure.LONGEST_COMMON_SEQUENCE: get_longest_common_sequence_similarity,
-        SimilarityMeasure.COMMON_PREFIX: get_common_prefix_similarity,
-        SimilarityMeasure.STARTS_WITH: get_starts_with_similarity,
-    }
 
-    similarity_func = similarity_functions[similarity_measure]
+    similarity_func = SIMILARITY_FUNCTIONS[similarity_measure]
     similarity = similarity_func(text, pattern, normalize=normalize)
     return similarity >= threshold

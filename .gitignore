@@ -84,3 +84,7 @@ docs/_build/
 *.bak
 *.swp
 *~ 
+
+# Local test files
+*.ipynb
+*.csv
