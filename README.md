@@ -61,7 +61,6 @@ search(
 ## Requirements
 
 - Python >= 3.11
-- NumPy >= 1.21.0
 - OpenAI API key (for LLM features)
 
 ## Development

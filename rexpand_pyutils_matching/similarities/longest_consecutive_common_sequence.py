@@ -5,7 +5,7 @@ Sequence-based similarity scoring using longest common subsequence.
 from ..utils.string import normalize_string
 
 
-def get_longest_common_sequence_similarity(
+def get_longest_consecutive_common_sequence_similarity(
     s1: str, s2: str, normalize: bool = True
 ) -> float:
     """
@@ -25,14 +25,14 @@ def get_longest_common_sequence_similarity(
         s1 = normalize_string(s1)
         s2 = normalize_string(s2)
 
-    lcs_str = get_longest_common_sequence(s1, s2)
+    lcs_str = get_longest_consecutive_common_sequence(s1, s2)
     max_length = max(len(s1), len(s2))
     similarity = len(lcs_str) / max_length if max_length > 0 else 1.0
 
     return similarity
 
 
-def get_longest_common_sequence(s1: str, s2: str) -> str:
+def get_longest_consecutive_common_sequence(s1: str, s2: str) -> str:
     """
     Calculate the longest common subsequence between two strings.
 
@@ -43,37 +43,23 @@ def get_longest_common_sequence(s1: str, s2: str) -> str:
     Returns:
         str: The longest common subsequence
     """
-    # Handle empty strings
-    if not s1 and not s2:
-        return ""
-    if not s1 or not s2:
-        return ""
-
-    # Get string lengths
     m, n = len(s1), len(s2)
-
-    # Create DP table
+    # Create a DP table where dp[i][j] holds the length of the longest common substring ending at str1[i-1] and str2[j-1]
     dp = [[0] * (n + 1) for _ in range(m + 1)]
 
-    # Fill the dp table
+    max_length = 0  # Length of longest common substring found so far
+    ending_index = 0  # Ending index in str1 of the longest common substring
+
+    # Build the DP table
     for i in range(1, m + 1):
         for j in range(1, n + 1):
             if s1[i - 1] == s2[j - 1]:
                 dp[i][j] = dp[i - 1][j - 1] + 1
+                if dp[i][j] > max_length:
+                    max_length = dp[i][j]
+                    ending_index = i  # Update the ending index in str1
             else:
-                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+                dp[i][j] = 0  # Reset if characters don't match
 
-    # Reconstruct the LCS
-    lcs = []
-    i, j = m, n
-    while i > 0 and j > 0:
-        if s1[i - 1] == s2[j - 1]:
-            lcs.append(s1[i - 1])
-            i -= 1
-            j -= 1
-        elif dp[i - 1][j] > dp[i][j - 1]:
-            i -= 1
-        else:
-            j -= 1
-
-    return "".join(reversed(lcs))
+    # The longest common substring is the segment of str1 ending at ending_index with length max_length
+    return s1[ending_index - max_length : ending_index]

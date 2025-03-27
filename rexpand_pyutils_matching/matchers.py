@@ -9,6 +9,9 @@ from .similarities.levenshtein import get_levenshtein_similarity
 from .similarities.longest_common_sequence import (
     get_longest_common_sequence_similarity,
 )
+from .similarities.longest_consecutive_common_sequence import (
+    get_longest_consecutive_common_sequence_similarity,
+)
 from .similarities.common_prefix import get_common_prefix_similarity
 from .similarities.starts_with import get_starts_with_similarity
 
@@ -18,6 +21,7 @@ class SimilarityMeasure(Enum):
 
     LEVENSHTEIN = "levenshtein"
     LONGEST_COMMON_SEQUENCE = "longest_common_sequence"
+    LONGEST_CONSECUTIVE_COMMON_SEQUENCE = "longest_consecutive_common_sequence"
     COMMON_PREFIX = "common_prefix"
     STARTS_WITH = "starts_with"
 
@@ -25,6 +29,7 @@ class SimilarityMeasure(Enum):
 SIMILARITY_FUNCTIONS = {
     SimilarityMeasure.LEVENSHTEIN: get_levenshtein_similarity,
     SimilarityMeasure.LONGEST_COMMON_SEQUENCE: get_longest_common_sequence_similarity,
+    SimilarityMeasure.LONGEST_CONSECUTIVE_COMMON_SEQUENCE: get_longest_consecutive_common_sequence_similarity,
     SimilarityMeasure.COMMON_PREFIX: get_common_prefix_similarity,
     SimilarityMeasure.STARTS_WITH: get_starts_with_similarity,
 }
