@@ -23,6 +23,7 @@ def fuzzy_search(
     candidate_count=5,
     similarity_measure=SimilarityMeasure.COMMON_PREFIX,
     normalize=True,
+    extra_params={},
 ):
     """
     Performs fuzzy search to find similar values from a list of standard values.
@@ -34,6 +35,7 @@ def fuzzy_search(
         candidate_count: Number of top candidates to return
         similarity_measure: Method to calculate similarity between strings
         normalize: Whether to normalize similarity scores
+        extra_params: Additional parameters for the similarity measure
 
     Returns:
         List of tuples (value, similarity_score) sorted by similarity
@@ -49,11 +51,18 @@ def fuzzy_search(
 
     # Calculate similarity scores for each standard value
     for value in standard_values:
-        similarity = similarity_func(search_key, value, normalize=normalize)
+        similarity = similarity_func(
+            search_key, value, normalize=normalize, **extra_params
+        )
         if not threshold or similarity >= threshold:
             candidates.append((value, similarity))
 
-    return sorted(candidates, key=lambda x: x[1], reverse=True)[:candidate_count]
+    sorted_candidates = sorted(candidates, key=lambda x: x[1], reverse=True)
+    return (
+        sorted_candidates[:candidate_count]
+        if candidate_count is not None
+        else sorted_candidates
+    )
 
 
 def exact_match_check(candidates, exact_match_threshold=1):
@@ -202,6 +211,7 @@ def search(
     llm_context_string=None,
     chatgpt_api_key=None,
     chatgpt_model="gpt-4o-mini",
+    fuzzy_search_extra_params={},
     verbose=False,
 ):
     """
@@ -235,6 +245,7 @@ def search(
         candidate_count=candidate_count,
         similarity_measure=similarity_measure,
         normalize=normalize,
+        extra_params=fuzzy_search_extra_params,
     )
     candidate_names = [candidate[0] for candidate in candidates]
     if verbose:
@@ -306,6 +317,7 @@ def search(
         candidate_count=1,
         similarity_measure=similarity_measure,
         normalize=normalize,
+        extra_params=fuzzy_search_extra_params,
     )
     is_suggested = not (len(revalidated_candidates) > 0)
     if verbose:
