@@ -4,7 +4,7 @@ Core string matching utilities providing various string comparison and pattern m
 
 from enum import Enum
 
-from .utils.string import normalize_string
+from .utils.string import normalize_string, IGNORED_CHARS
 from .similarities.levenshtein import get_levenshtein_similarity
 from .similarities.longest_common_sequence import (
     get_longest_common_sequence_similarity,
@@ -65,6 +65,8 @@ def fuzzy_match(
     threshold: float = 0.95,
     similarity_measure: SimilarityMeasure = SimilarityMeasure.COMMON_PREFIX,
     normalize: bool = True,
+    ignored_chars: list[str] = IGNORED_CHARS,
+    extra_params: dict = {},
 ) -> bool:
     """
     Perform fuzzy string matching using various similarity measures.
@@ -75,6 +77,8 @@ def fuzzy_match(
         threshold: Similarity threshold (0.0 to 1.0), default is 0.8
         similarity_measure: The similarity measure to use, default is COMMON_PREFIX
         normalize: Whether to normalize strings before comparison, default is True
+        ignored_chars: Characters to ignore when comparing strings
+        extra_params: Additional parameters for the similarity measure
 
     Returns:
         bool: True if similarity >= threshold, False otherwise
@@ -89,5 +93,11 @@ def fuzzy_match(
     """
 
     similarity_func = SIMILARITY_FUNCTIONS[similarity_measure]
-    similarity = similarity_func(text, pattern, normalize=normalize)
+    similarity = similarity_func(
+        text,
+        pattern,
+        normalize=normalize,
+        ignored_chars=ignored_chars,
+        **extra_params,
+    )
     return similarity >= threshold

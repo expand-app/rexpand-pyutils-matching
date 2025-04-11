@@ -9,7 +9,7 @@ from rexpand_pyutils_matching.matchers import SimilarityMeasure, SIMILARITY_FUNC
 
 import json
 from rexpand_pyutils_matching.utils.chatgpt import ask_chatgpt
-
+from rexpand_pyutils_matching.utils.string import IGNORED_CHARS
 
 MIN_SUGGESTION_CANDIDATE_COUNT = (
     3  # The minimum number of candidates to sample for value suggestion
@@ -17,13 +17,14 @@ MIN_SUGGESTION_CANDIDATE_COUNT = (
 
 
 def fuzzy_search(
-    search_key,
-    standard_values,
-    threshold=None,
-    candidate_count=5,
-    similarity_measure=SimilarityMeasure.COMMON_PREFIX,
-    normalize=True,
-    extra_params={},
+    search_key: str,
+    standard_values: list[str],
+    threshold: float | None = None,
+    candidate_count: int = 5,
+    similarity_measure: SimilarityMeasure = SimilarityMeasure.COMMON_PREFIX,
+    normalize: bool = True,
+    ignored_chars: list[str] = IGNORED_CHARS,
+    extra_params: dict = {},
 ):
     """
     Performs fuzzy search to find similar values from a list of standard values.
@@ -35,6 +36,7 @@ def fuzzy_search(
         candidate_count: Number of top candidates to return
         similarity_measure: Method to calculate similarity between strings
         normalize: Whether to normalize similarity scores
+        ignored_chars: Characters to ignore when normalizing strings
         extra_params: Additional parameters for the similarity measure
 
     Returns:
@@ -52,7 +54,11 @@ def fuzzy_search(
     # Calculate similarity scores for each standard value
     for value in standard_values:
         similarity = similarity_func(
-            search_key, value, normalize=normalize, **extra_params
+            search_key,
+            value,
+            normalize=normalize,
+            ignored_chars=ignored_chars,
+            **extra_params,
         )
         if not threshold or similarity >= threshold:
             candidates.append((value, similarity))

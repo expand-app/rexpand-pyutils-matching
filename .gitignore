@@ -88,3 +88,5 @@ docs/_build/
 # Local test files
 *.ipynb
 *.csv
+input/
+output/

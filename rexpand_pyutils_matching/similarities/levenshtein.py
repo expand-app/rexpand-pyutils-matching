@@ -2,10 +2,15 @@
 Levenshtein (edit) distance based similarity scoring.
 """
 
-from ..utils.string import normalize_string
+from rexpand_pyutils_matching.utils.string import IGNORED_CHARS, normalize_string
 
 
-def get_levenshtein_similarity(s1: str, s2: str, normalize: bool = True) -> float:
+def get_levenshtein_similarity(
+    s1: str,
+    s2: str,
+    normalize: bool = True,
+    ignored_chars: list[str] | None = IGNORED_CHARS,
+) -> float:
     """
     Calculate similarity score based on Levenshtein distance.
     Score is normalized between 0 (completely different) and 1 (identical).
@@ -14,13 +19,14 @@ def get_levenshtein_similarity(s1: str, s2: str, normalize: bool = True) -> floa
         s1: First string
         s2: Second string
         normalize: Whether to normalize the strings before comparison
+        ignored_chars: Characters to ignore when normalizing strings
 
     Returns:
         float: Similarity score between 0 and 1
     """
     if normalize:
-        s1 = normalize_string(s1)
-        s2 = normalize_string(s2)
+        s1 = normalize_string(s1, ignored_chars)
+        s2 = normalize_string(s2, ignored_chars)
 
     # Handle empty strings
     if not s1 and not s2:

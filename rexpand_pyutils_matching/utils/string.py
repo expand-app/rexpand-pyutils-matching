@@ -15,7 +15,7 @@ def normalize_spaces(text: str) -> str:
 
 
 # Define common special_s to be replaced with spaces
-SPECIAL_CHARS = [
+IGNORED_CHARS = [
     "/",
     ",",
     ";",
@@ -39,8 +39,8 @@ SPECIAL_CHARS = [
 
 
 # Normalize both strings by replacing special_s with spaces and converting to lowercase
-def normalize_string(text: str) -> str:
+def normalize_string(text: str, ignored_chars=IGNORED_CHARS) -> str:
     text = text.lower()
-    for special_char in SPECIAL_CHARS:
+    for special_char in ignored_chars:
         text = text.replace(special_char, " ")
     return normalize_spaces(text)

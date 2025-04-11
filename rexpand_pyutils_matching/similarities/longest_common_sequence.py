@@ -2,11 +2,14 @@
 Sequence-based similarity scoring using longest common subsequence.
 """
 
-from ..utils.string import normalize_string
+from rexpand_pyutils_matching.utils.string import IGNORED_CHARS, normalize_string
 
 
 def get_longest_common_sequence_similarity(
-    s1: str, s2: str, normalize: bool = True
+    s1: str,
+    s2: str,
+    normalize: bool = True,
+    ignored_chars: list[str] | None = IGNORED_CHARS,
 ) -> float:
     """
     Calculate similarity score based on longest common subsequence.
@@ -17,13 +20,14 @@ def get_longest_common_sequence_similarity(
         s1: First string
         s2: Second string
         normalize: Whether to normalize the strings before comparison
+        ignored_chars: Characters to ignore when normalizing strings
 
     Returns:
         float: Similarity score between 0 and 1
     """
     if normalize:
-        s1 = normalize_string(s1)
-        s2 = normalize_string(s2)
+        s1 = normalize_string(s1, ignored_chars)
+        s2 = normalize_string(s2, ignored_chars)
 
     lcs_str = get_longest_common_sequence(s1, s2)
     max_length = max(len(s1), len(s2))
