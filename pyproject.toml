@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rexpand-pyutils-matching"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
   { name="Shuo Feng" },
 ]
@@ -17,7 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "openai==1.66.3",
+    "openai>=1.66.3",
 ]
 
 [project.optional-dependencies]

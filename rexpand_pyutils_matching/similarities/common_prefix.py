@@ -78,8 +78,8 @@ def get_common_prefix_similarity(
     if s1 == s2:
         return 1
     else:
-        s1_substrings = [part.strip() for part in s1.split(separator)]
-        s2_substrings = [part.strip() for part in s2.split(separator)]
+        s1_substrings = [part.strip() for part in s1.split(separator) if part.strip()]
+        s2_substrings = [part.strip() for part in s2.split(separator) if part.strip()]
 
         # Initialize s1_weight_dict, s1_total_weight, s2_weight_dict, s2_total_weight
         if get_part_weights is not None:
