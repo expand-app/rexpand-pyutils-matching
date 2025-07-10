@@ -1,5 +1,5 @@
 from typing import Callable
-from rexpand_pyutils_matching.utils.string import IGNORED_CHARS, normalize_string
+from rexpand_pyutils_matching.utils.string import normalize_string, IGNORED_CHARS
 
 
 def _get_partial_similarity(
@@ -7,6 +7,7 @@ def _get_partial_similarity(
     s2_substrings: list[str],
     s1_weight_dict: dict[str, float] | None = None,
     s1_total_weight: float | None = None,
+    common_prefix_min_ratio: float = 0.8,
 ) -> float:
     # Initialize s1_weight_dict and s1_total_weight if they are not provided
     if s1_weight_dict is None:
@@ -23,15 +24,28 @@ def _get_partial_similarity(
         else:
             current_score_a = 0
             for b in set_b:
-                if b.startswith(a):
-                    current_score_a = max(current_score_a, len(a) / len(b))
+                # Find the common prefix length
+                common_prefix_len = 0
+                min_len = min(len(a), len(b))
 
-        score_a += current_score_a * s1_weight_dict[a]
+                for i in range(min_len):
+                    if a[i] != b[i]:
+                        break
+                    common_prefix_len += 1
+
+                if (common_prefix_len / min_len) >= common_prefix_min_ratio:
+                    tmp_score = 2 * common_prefix_len / (len(a) + len(b))
+                    if tmp_score > current_score_a:
+                        current_score_a = tmp_score
+
+        partial_score_a = current_score_a * s1_weight_dict[a]
+
+        score_a += partial_score_a
 
     return score_a / s1_total_weight
 
 
-def get_starts_with_similarity(
+def get_bert_score_similarity(
     s1: str,
     s2: str,
     get_part_weights: Callable[[str], dict[str, float]] | None = None,
@@ -39,6 +53,7 @@ def get_starts_with_similarity(
     normalize: bool = True,
     ignored_chars: list[str] | None = IGNORED_CHARS,
     separator: str = " ",
+    common_prefix_min_ratio: float = 0.8,
 ) -> float:
     """
     Calculate similarity score based on whether one string starts with another.
@@ -52,6 +67,7 @@ def get_starts_with_similarity(
         normalize: Whether to normalize the strings before comparison
         ignored_chars: Characters to ignore when normalizing strings
         separator: Separator to split the strings into parts
+        common_prefix_min_ratio: Minimum ratio of common prefix to consider a match
 
     Returns:
         float: Similarity score between 0 and 1
@@ -104,15 +120,14 @@ def get_starts_with_similarity(
             s2_substrings,
             s1_weight_dict=s1_weight_dict,
             s1_total_weight=s1_total_weight,
+            common_prefix_min_ratio=common_prefix_min_ratio,
         )
         score_b = _get_partial_similarity(
             s2_substrings,
             s1_substrings,
             s1_weight_dict=s2_weight_dict,
             s1_total_weight=s2_total_weight,
+            common_prefix_min_ratio=common_prefix_min_ratio,
         )
 
-        weighted_partial_score_a = score_a * len(s1) / (len(s1) + len(s2))
-        weighted_partial_score_b = score_b * len(s2) / (len(s2) + len(s1))
-
-        return weighted_partial_score_a + weighted_partial_score_b
+        return 2 * score_a * score_b / (score_a + score_b)
