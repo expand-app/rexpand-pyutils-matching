@@ -130,4 +130,8 @@ def get_bert_score_similarity(
             common_prefix_min_ratio=common_prefix_min_ratio,
         )
 
-        return 2 * score_a * score_b / (score_a + score_b)
+        return (
+            2 * score_a * score_b / (score_a + score_b)
+            if score_a + score_b != 0
+            else 0.0
+        )
