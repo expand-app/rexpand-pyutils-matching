@@ -1,54 +1,31 @@
 from typing import Callable
-from rexpand_pyutils_matching.utils.string import normalize_string, IGNORED_CHARS
+from ..utils.matching_socre_basics import (
+    get_source_list_to_target_list_matching_score,
+)
+from ..utils.string import (
+    get_string_common_prefix,
+    normalize_string,
+    IGNORED_CHARS,
+    split_string,
+)
 
 
-def _get_partial_similarity(
-    s1_substrings: list[str],
-    s2_substrings: list[str],
-    s1_weight_dict: dict[str, float] | None = None,
-    s1_total_weight: float | None = None,
+def get_elem_common_prefix_score(
+    a: str,
+    b: str,
     common_prefix_min_ratio: float = 0.8,
 ) -> float:
-    # Initialize s1_weight_dict and s1_total_weight if they are not provided
-    if s1_weight_dict is None:
-        s1_weight_dict = {part: 1 for part in s1_substrings}
-
-    if s1_total_weight is None:
-        s1_total_weight = sum(s1_weight_dict.values())
-
-    score_a = 0
-    set_b = set(s2_substrings)
-    for a in s1_substrings:
-        if a in set_b:
-            current_score_a = 1
-        else:
-            current_score_a = 0
-            for b in set_b:
-                # Find the common prefix length
-                common_prefix_len = 0
-                min_len = min(len(a), len(b))
-
-                for i in range(min_len):
-                    if a[i] != b[i]:
-                        break
-                    common_prefix_len += 1
-
-                if (common_prefix_len / min_len) >= common_prefix_min_ratio:
-                    tmp_score = 2 * common_prefix_len / (len(a) + len(b))
-                    if tmp_score > current_score_a:
-                        current_score_a = tmp_score
-
-        partial_score_a = current_score_a * s1_weight_dict[a]
-
-        score_a += partial_score_a
-
-    return score_a / s1_total_weight
+    common_prefix_len = get_string_common_prefix(a, b)
+    if (common_prefix_len / min(len(a), len(b))) >= common_prefix_min_ratio:
+        return 2 * common_prefix_len / (len(a) + len(b))
+    return 0
 
 
 def get_bert_score_similarity(
     s1: str,
     s2: str,
     get_part_weights: Callable[[str], dict[str, float]] | None = None,
+    get_part_weight: Callable[[str], float] | None = None,
     weight_by_length: bool = True,
     normalize: bool = True,
     ignored_chars: list[str] | None = IGNORED_CHARS,
@@ -63,6 +40,7 @@ def get_bert_score_similarity(
         s1: First string
         s2: Second string
         get_part_weights: Function to get the weight of each part of the string
+        get_part_weight: Function to get the weight of a part of the string
         weight_by_length: Whether to weight the parts by their length
         normalize: Whether to normalize the strings before comparison
         ignored_chars: Characters to ignore when normalizing strings
@@ -79,55 +57,51 @@ def get_bert_score_similarity(
     if s1 == s2:
         return 1
     else:
-        s1_substrings = [part.strip() for part in s1.split(separator) if part.strip()]
+        s1_substrings = split_string(s1, separator)
         if len(s1_substrings) == 0:
             return 0.0
 
-        s2_substrings = [part.strip() for part in s2.split(separator) if part.strip()]
+        s2_substrings = split_string(s2, separator)
         if len(s2_substrings) == 0:
             return 0.0
 
-        # Initialize s1_weight_dict, s1_total_weight, s2_weight_dict, s2_total_weight
-        if get_part_weights is not None:
-            s1_weight_dict = get_part_weights(s1)
-            s1_total_weight = sum(s1_weight_dict.values())
+        get_elem2_weight = get_part_weight
+        if get_elem2_weight is None:
+            if get_part_weights is not None:
+                s2_weight_dict = get_part_weights(s2)
+            elif weight_by_length:
+                s2_weight_dict = {part: len(part) for part in s2_substrings}
+            else:
+                s2_weight_dict = {}
 
-            s2_weight_dict = get_part_weights(s2)
-            s2_total_weight = sum(s2_weight_dict.values())
-        elif weight_by_length:
-            s1_weight_dict = {}
-            s1_total_weight = 0
-            for part in s1_substrings:
-                length = len(part)
-                s1_weight_dict[part] = length
-                s1_total_weight += length
+            get_elem2_weight = lambda x: s2_weight_dict.get(x, 1)
 
-            s2_weight_dict = {}
-            s2_total_weight = 0
-            for part in s2_substrings:
-                length = len(part)
-                s2_weight_dict[part] = length
-                s2_total_weight += length
-        else:
-            s1_weight_dict = {part: 1 for part in s1_substrings}
-            s1_total_weight = len(s1_substrings)
+        get_elem1_weight = get_part_weight
+        if get_elem1_weight is None:
+            if get_part_weights is not None:
+                s1_weight_dict = get_part_weights(s1)
+            elif weight_by_length:
+                s1_weight_dict = {part: len(part) for part in s1_substrings}
+            else:
+                s1_weight_dict = {}
 
-            s2_weight_dict = {part: 1 for part in s2_substrings}
-            s2_total_weight = len(s2_substrings)
+            get_elem1_weight = lambda x: s1_weight_dict.get(x, 1)
 
-        score_a = _get_partial_similarity(
-            s1_substrings,
-            s2_substrings,
-            s1_weight_dict=s1_weight_dict,
-            s1_total_weight=s1_total_weight,
-            common_prefix_min_ratio=common_prefix_min_ratio,
+        get_elem_matching_score = lambda x, y: get_elem_common_prefix_score(
+            x, y, common_prefix_min_ratio
         )
-        score_b = _get_partial_similarity(
-            s2_substrings,
-            s1_substrings,
-            s1_weight_dict=s2_weight_dict,
-            s1_total_weight=s2_total_weight,
-            common_prefix_min_ratio=common_prefix_min_ratio,
+
+        score_a = get_source_list_to_target_list_matching_score(
+            source=s1_substrings,
+            target=s2_substrings,
+            get_elem_matching_score=get_elem_matching_score,
+            get_target_elem_weight=get_elem2_weight,
+        )
+        score_b = get_source_list_to_target_list_matching_score(
+            source=s2_substrings,
+            target=s1_substrings,
+            get_elem_matching_score=get_elem_matching_score,
+            get_target_elem_weight=get_elem1_weight,
         )
 
         return (

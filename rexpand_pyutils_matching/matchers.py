@@ -15,6 +15,7 @@ from .similarities.longest_consecutive_common_sequence import (
 from .similarities.common_prefix import get_common_prefix_similarity
 from .similarities.starts_with import get_starts_with_similarity
 from .similarities.bert_score import get_bert_score_similarity
+from .similarities.directional_similarity import get_directional_similarity
 
 
 class SimilarityMeasure(Enum):
@@ -26,6 +27,7 @@ class SimilarityMeasure(Enum):
     COMMON_PREFIX = "common_prefix"
     STARTS_WITH = "starts_with"
     BERT_SCORE = "bert_score"
+    DIRECTIONAL_SIMILARITY = "directional_similarity"
 
 
 SIMILARITY_FUNCTIONS = {
@@ -35,6 +37,7 @@ SIMILARITY_FUNCTIONS = {
     SimilarityMeasure.COMMON_PREFIX: get_common_prefix_similarity,
     SimilarityMeasure.STARTS_WITH: get_starts_with_similarity,
     SimilarityMeasure.BERT_SCORE: get_bert_score_similarity,
+    SimilarityMeasure.DIRECTIONAL_SIMILARITY: get_directional_similarity,
 }
 
 
